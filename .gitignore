@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Local data
+data/
+*.db
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment / OS
+.env
+.DS_Store
