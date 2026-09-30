@@ -23,3 +23,15 @@ Decision: Scheduling is a generic domain that receives participant names and a t
 Alternatives considered: A single trips module with availability stored as part of each trip. Rejected because it would give that module two reasons to change (trip organization and date finding), violating the Single Responsibility Principle, and would make date finding depend on trip tables, so it couldn't be reused for other kinds of group plans or deployed separately without rewriting both the logic and the schema.
 
 Consequences: In Assignment 2, the in-process call from Trips to scheduling.service becomes a single HTTP call, and each domain takes its own tables with it. The cost is some duplicated data: participant names are stored by both domains instead of being shared through a join.
+
+
+## 3. Cross-domain data references without foreign keys
+Date: 2026-09-30
+Status: Decided
+Context: Both domains must share one SQLite file for now, but Assignment 2 will move them into separate services, each with its own database. Trips needs to know which date poll its dates came from, and availability needs to identify each participant.
+
+Decision: Each domain creates and owns its own tables, using foreign keys only within a domain: across domains, trips.date_poll_id is a plain integer and availability.participant is a text name, with no FOREIGN KEY between them. Availability is stored as one row per participant per free day, with dates "YYYY-MM-DD".
+
+Alternatives considered: Foreign keys from availability to members and from trips to date_polls. Rejected because the database would then enforce links across domains, which breaks as soon as the tables live in separate databases. Storing availability as date ranges was also rejected: overlapping ranges make the date window calculation much harder, while one row per day costs at most about 900 rows per poll at our scale.
+
+Consequences: Each domain can later take its tables with it without schema changes. The cost is that the database no longer guarantees a trip's date_poll_id exists or that a participant name matches a member, so the application must check this, and member names are stored in both domains.
