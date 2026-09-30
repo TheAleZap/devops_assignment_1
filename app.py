@@ -1,5 +1,7 @@
 import os
 from contextlib import asynccontextmanager
+from scheduling import repository as scheduling_repository
+from trips import repository as trips_repository
 
 import uvicorn
 from fastapi import FastAPI
@@ -16,6 +18,8 @@ STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     db.init_db()
+    scheduling_repository.create_tables()
+    trips_repository.create_tables()
     yield
 
 
