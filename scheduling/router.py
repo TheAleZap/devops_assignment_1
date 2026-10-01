@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from scheduling import service
@@ -46,3 +46,11 @@ def set_availability(poll_id: int, body: AvailabilityUpdate):
         raise HTTPException(status_code=404, detail=str(error))
     except service.SchedulingError as error:
         raise HTTPException(status_code=400, detail=str(error))
+
+
+@router.get("/polls/{poll_id}/best-windows")
+def get_best_windows(poll_id: int, limit: int = Query(default=5, ge=1, le=20)):
+    try:
+        return service.get_best_windows(poll_id, limit)
+    except service.PollNotFoundError as error:
+        raise HTTPException(status_code=404, detail=str(error))

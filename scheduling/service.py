@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 from scheduling import repository
 
@@ -58,3 +58,49 @@ def set_availability(poll_id, participant, days):
     unique_days = sorted({day.isoformat() for day in days})
     repository.replace_availability(poll_id, participant.strip(), unique_days)
     return get_poll(poll_id)
+
+def find_best_windows(range_start, range_end, trip_length, availability, limit=5):
+    free_days = {
+        participant: {date.fromisoformat(day) for day in days}
+        for participant, days in availability.items()
+    }
+    if not free_days:
+        return []
+
+    windows = []
+    last_start = range_end - timedelta(days=trip_length - 1)
+    start = range_start
+    while start <= last_start:
+        window_days = [start + timedelta(days=offset) for offset in range(trip_length)]
+        available = []
+        missing = []
+        missed_days = 0
+        for participant, days in sorted(free_days.items()):
+            not_free = sum(1 for day in window_days if day not in days)
+            if not_free == 0:
+                available.append(participant)
+            else:
+                missing.append(participant)
+                missed_days += not_free
+        windows.append({
+            "start": start.isoformat(),
+            "end": window_days[-1].isoformat(),
+            "available": available,
+            "missing": missing,
+            "missed_days": missed_days,
+        })
+        start += timedelta(days=1)
+
+    windows.sort(key=lambda w: (-len(w["available"]), w["missed_days"], w["start"]))
+    return windows[:limit]
+
+
+def get_best_windows(poll_id, limit=5):
+    poll = get_poll(poll_id)
+    return find_best_windows(
+        date.fromisoformat(poll["range_start"]),
+        date.fromisoformat(poll["range_end"]),
+        poll["trip_length"],
+        poll["availability"],
+        limit,
+    )
