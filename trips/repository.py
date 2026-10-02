@@ -86,3 +86,50 @@ def get_members(trip_id):
         return [dict(row) for row in rows]
     finally:
         conn.close()
+
+
+def insert_task(trip_id, title):
+    conn = db.get_connection()
+    try:
+        with conn:
+            conn.execute(
+                "INSERT INTO tasks (trip_id, title) VALUES (?, ?)",
+                (trip_id, title),
+            )
+    finally:
+        conn.close()
+
+
+def get_tasks(trip_id):
+    conn = db.get_connection()
+    try:
+        rows = conn.execute(
+            "SELECT tasks.id, tasks.title, tasks.done, members.name AS claimed_by "
+            "FROM tasks LEFT JOIN members ON members.id = tasks.claimed_by "
+            "WHERE tasks.trip_id = ? ORDER BY tasks.id",
+            (trip_id,),
+        ).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
+
+
+def set_task_claim(task_id, member_id):
+    conn = db.get_connection()
+    try:
+        with conn:
+            conn.execute(
+                "UPDATE tasks SET claimed_by = ? WHERE id = ?",
+                (member_id, task_id),
+            )
+    finally:
+        conn.close()
+
+
+def set_task_done(task_id):
+    conn = db.get_connection()
+    try:
+        with conn:
+            conn.execute("UPDATE tasks SET done = 1 WHERE id = ?", (task_id,))
+    finally:
+        conn.close()
