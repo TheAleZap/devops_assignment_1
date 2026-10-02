@@ -32,3 +32,57 @@ def create_tables():
     conn = db.get_connection()
     conn.executescript(SCHEMA)
     conn.close()
+
+def insert_trip_with_members(name, destination, member_names):
+    conn = db.get_connection()
+    try:
+        with conn:
+            cursor = conn.execute(
+                "INSERT INTO trips (name, destination) VALUES (?, ?)",
+                (name, destination),
+            )
+            trip_id = cursor.lastrowid
+            conn.executemany(
+                "INSERT INTO members (trip_id, name) VALUES (?, ?)",
+                [(trip_id, member_name) for member_name in member_names],
+            )
+        return trip_id
+    finally:
+        conn.close()
+
+
+def get_trip(trip_id):
+    conn = db.get_connection()
+    try:
+        row = conn.execute(
+            "SELECT id, name, destination, start_date, end_date, date_poll_id "
+            "FROM trips WHERE id = ?",
+            (trip_id,),
+        ).fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()
+
+
+def insert_member(trip_id, name):
+    conn = db.get_connection()
+    try:
+        with conn:
+            conn.execute(
+                "INSERT INTO members (trip_id, name) VALUES (?, ?)",
+                (trip_id, name),
+            )
+    finally:
+        conn.close()
+
+
+def get_members(trip_id):
+    conn = db.get_connection()
+    try:
+        rows = conn.execute(
+            "SELECT id, name FROM members WHERE trip_id = ? ORDER BY id",
+            (trip_id,),
+        ).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
