@@ -104,3 +104,21 @@ def get_best_windows(poll_id, limit=5):
         poll["availability"],
         limit,
     )
+
+def describe_window(poll_id, start):
+    poll = get_poll(poll_id)
+    range_start = date.fromisoformat(poll["range_start"])
+    range_end = date.fromisoformat(poll["range_end"])
+    end = start + timedelta(days=poll["trip_length"] - 1)
+    if start < range_start or end > range_end:
+        raise SchedulingError("That window falls outside the poll's date range")
+    windows = find_best_windows(start, end, poll["trip_length"], poll["availability"])
+    if windows:
+        return windows[0]
+    return {
+        "start": start.isoformat(),
+        "end": end.isoformat(),
+        "available": [],
+        "missing": [],
+        "missed_days": 0,
+    }
