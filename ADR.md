@@ -35,3 +35,16 @@ Decision: Each domain creates and owns its own tables, using foreign keys only w
 Alternatives considered: Foreign keys from availability to members and from trips to date_polls. Rejected because the database would then enforce links across domains, which breaks as soon as the tables live in separate databases. Storing availability as date ranges was also rejected: overlapping ranges make the date window calculation much harder, while one row per day costs at most about 900 rows per poll at our scale.
 
 Consequences: Each domain can later take its tables with it without schema changes. The cost is that the database no longer guarantees a trip's date_poll_id exists or that a participant name matches a member, so the application must check this, and member names are stored in both domains.
+
+
+
+## 4. Testing approach: unit-test the service layer, verify routers manually
+Date: 2026-10-04
+Status: Decided
+
+Context: The assignment requires at least 70% coverage on the core business logic of both domains, within a one-week build. Almost all of TripSync's logic lives in the service layer: the date-window ranking, input validation, the task-board rules, and the date confirmation between domains.
+Decision: Test the service layer with pytest: pure functions directly, and database-backed service functions against a fresh temporary SQLite database per test (the temp_db fixture, using tmp_path and monkeypatch). Coverage is measured over both whole packages, routers included, with python -m pytest --cov=scheduling --cov=trips: 40 tests, 76% total, 100% on every service and repository module, 0% on the routers.
+
+Alternatives considered: Testing the routers with FastAPI's TestClient was rejected for now: it adds a dependency (httpx), and the routers only translate HTTP requests into service calls and errors into status codes, which I verified manually with curl. Excluding the routers from the measurement to report a higher number was also rejected, because reporting the full total is more transparent.
+
+Consequences: Regressions in the business rules (ranking order, task claiming, date-window validation) are caught automatically. A mistake in the routers' error mapping, such as returning 400 instead of 404, would only be caught manually, so router tests with TestClient are the first thing to add next.
