@@ -48,3 +48,12 @@ Decision: Test the service layer with pytest: pure functions directly, and datab
 Alternatives considered: Testing the routers with FastAPI's TestClient was rejected for now: it adds a dependency (httpx), and the routers only translate HTTP requests into service calls and errors into status codes, which I verified manually with curl. Excluding the routers from the measurement to report a higher number was also rejected, because reporting the full total is more transparent.
 
 Consequences: Regressions in the business rules (ranking order, task claiming, date-window validation) are caught automatically. A mistake in the routers' error mapping, such as returning 400 instead of 404, would only be caught manually, so router tests with TestClient are the first thing to add next.
+
+
+## 5. Not building general-purpose polls
+Date: 2026-10-04
+Status: Decided
+Context: The original proposal included polls with deadlines for other group decisions, such as destination or activities, alongside the date finder. The date-window algorithm, the Trips domain and their tests took most of the week, so I had to decide where the remaining time went.
+Decision: Not build general polls; the Scheduling domain covers only the date decision (date polls, availability and best windows), and other group decisions stay outside the app for now.
+Alternatives considered: Simple approval-vote polls with deadlines inside the Scheduling domain. Rejected because they would add new tables, endpoints and tests without strengthening the core problem: group chats already handle destination votes reasonably well with built-in polls, while matching everyone's dates is exactly where they fail.
+Consequences: The time went into testing the core logic and into documentation, and the app does one job well, but groups still have to decide destination and activities elsewhere. Because Scheduling is generic and has no dependency on Trips, polls could be added there later without changing the Trips domain.
