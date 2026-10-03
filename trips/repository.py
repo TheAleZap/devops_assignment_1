@@ -133,3 +133,15 @@ def set_task_done(task_id):
             conn.execute("UPDATE tasks SET done = 1 WHERE id = ?", (task_id,))
     finally:
         conn.close()
+
+
+def set_trip_dates(trip_id, start_date, end_date, date_poll_id):
+    conn = db.get_connection()
+    try:
+        with conn:
+            conn.execute(
+                "UPDATE trips SET start_date = ?, end_date = ?, date_poll_id = ? WHERE id = ?",
+                (start_date, end_date, date_poll_id, trip_id),
+            )
+    finally:
+        conn.close()

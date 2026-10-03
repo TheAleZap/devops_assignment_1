@@ -1,3 +1,4 @@
+from scheduling import service as scheduling_service
 from trips import repository
 
 
@@ -116,3 +117,17 @@ def complete_task(trip_id, task_id):
         raise TripsError("Claim the task before marking it done")
     repository.set_task_done(task_id)
     return get_trip(trip_id)
+
+
+# ---------- Dates (the seam with Scheduling) ----------
+
+def confirm_dates(trip_id, date_poll_id, start):
+    get_trip(trip_id)
+    try:
+        window = scheduling_service.describe_window(date_poll_id, start)
+    except scheduling_service.SchedulingError as error:
+        raise TripsError(str(error))
+    repository.set_trip_dates(trip_id, window["start"], window["end"], date_poll_id)
+    trip = get_trip(trip_id)
+    trip["confirmed_window"] = window
+    return trip

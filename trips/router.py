@@ -1,3 +1,4 @@
+from datetime import date
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
@@ -63,3 +64,13 @@ def claim_task(trip_id: int, task_id: int, body: TaskClaim):
 @router.post("/{trip_id}/tasks/{task_id}/complete")
 def complete_task(trip_id: int, task_id: int):
     return run(service.complete_task, trip_id, task_id)
+
+
+class DatesConfirm(BaseModel):
+    date_poll_id: int = Field(ge=1)
+    start: date
+
+
+@router.put("/{trip_id}/dates")
+def confirm_dates(trip_id: int, body: DatesConfirm):
+    return run(service.confirm_dates, trip_id, body.date_poll_id, body.start)
