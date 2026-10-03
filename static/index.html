@@ -7,8 +7,45 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>TripSync</h1>
-  <p id="status">Checking API…</p>
+  <header>
+    <h1>TripSync</h1>
+    <p class="tagline">Find the dates when everyone can actually go.</p>
+  </header>
+
+  <section id="create-section" class="card">
+    <h2>Start a date poll</h2>
+    <div class="form-grid">
+      <label>Trip name <input id="title" type="text" placeholder="Autumn trip"></label>
+      <label>From <input id="range-start" type="date"></label>
+      <label>To <input id="range-end" type="date"></label>
+      <label>Trip length (days) <input id="trip-length" type="number" min="1" value="3"></label>
+    </div>
+    <button id="create-button">Create poll</button>
+    <p class="divider">or open an existing poll</p>
+    <div class="row">
+      <input id="poll-id-input" type="number" min="1" placeholder="Poll ID">
+      <button id="open-button" class="secondary">Open</button>
+    </div>
+  </section>
+
+  <section id="poll-section" class="card hidden">
+    <h2 id="poll-title"></h2>
+    <p id="poll-meta" class="muted"></p>
+    <div class="row">
+      <input id="participant" type="text" placeholder="Your name">
+      <button id="save-button">Save my days</button>
+    </div>
+    <p class="muted">Click the days you're free. The small number shows how many people are free that day.</p>
+    <div id="calendar" class="calendar"></div>
+  </section>
+
+  <section id="windows-section" class="card hidden">
+    <h2>Best dates</h2>
+    <ol id="windows"></ol>
+  </section>
+
+  <p id="message" class="message"></p>
+
   <script src="app.js"></script>
 </body>
 </html>
