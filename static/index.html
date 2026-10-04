@@ -9,40 +9,91 @@
 <body>
   <header>
     <h1>TripSync</h1>
-    <p class="tagline">Find the dates when everyone can actually go.</p>
+    <p class="tagline">Find the dates when everyone can actually go — then organize the trip.</p>
   </header>
 
-  <section id="create-section" class="card">
-    <h2>Start a date poll</h2>
-    <div class="form-grid">
-      <label>Trip name <input id="title" type="text" placeholder="Autumn trip"></label>
-      <label>From <input id="range-start" type="date"></label>
-      <label>To <input id="range-end" type="date"></label>
-      <label>Trip length (days) <input id="trip-length" type="number" min="1" value="3"></label>
-    </div>
-    <button id="create-button">Create poll</button>
-    <p class="divider">or open an existing poll</p>
-    <div class="row">
-      <input id="poll-id-input" type="number" min="1" placeholder="Poll ID">
-      <button id="open-button" class="secondary">Open</button>
-    </div>
-  </section>
+  <nav class="tabs">
+    <button type="button" id="tab-scheduling" class="tab active">Scheduling</button>
+    <button type="button" id="tab-trips" class="tab">Trips</button>
+  </nav>
 
-  <section id="poll-section" class="card hidden">
-    <h2 id="poll-title"></h2>
-    <p id="poll-meta" class="muted"></p>
-    <div class="row">
-      <input id="participant" type="text" placeholder="Your name">
-      <button id="save-button">Save my days</button>
-    </div>
-    <p class="muted">Click the days you're free. The small number shows how many people are free that day.</p>
-    <div id="calendar" class="calendar"></div>
-  </section>
+  <div id="panel-scheduling">
+    <section id="create-section" class="card">
+      <h2>Start a date poll</h2>
+      <div class="form-grid">
+        <label>Trip name <input id="title" type="text" placeholder="Autumn trip"></label>
+        <label>From <input id="range-start" type="date"></label>
+        <label>To <input id="range-end" type="date"></label>
+        <label>Trip length (days) <input id="trip-length" type="number" min="1" value="3"></label>
+      </div>
+      <button id="create-button">Create poll</button>
+      <p class="divider">or open an existing poll</p>
+      <div class="row">
+        <input id="poll-id-input" type="number" min="1" placeholder="Poll ID">
+        <button id="open-button" class="secondary">Open</button>
+      </div>
+    </section>
 
-  <section id="windows-section" class="card hidden">
-    <h2>Best dates</h2>
-    <ol id="windows"></ol>
-  </section>
+    <section id="poll-section" class="card hidden">
+      <h2 id="poll-title"></h2>
+      <p id="poll-meta" class="muted"></p>
+      <div class="row">
+        <input id="participant" type="text" placeholder="Your name">
+        <button id="save-button">Save my days</button>
+      </div>
+      <p class="muted">Click the days you're free. The small number shows how many people are free that day.</p>
+      <div id="calendar" class="calendar"></div>
+    </section>
+
+    <section id="windows-section" class="card hidden">
+      <h2>Best dates</h2>
+      <ol id="windows"></ol>
+    </section>
+  </div>
+
+  <div id="panel-trips" class="hidden">
+    <section class="card">
+      <h2>Create a trip</h2>
+      <div class="form-grid">
+        <label>Name <input id="trip-name" type="text" placeholder="Autumn in Lisbon"></label>
+        <label>Destination <input id="trip-destination" type="text" placeholder="Lisbon (optional)"></label>
+        <label>Members (comma-separated) <input id="trip-members" type="text" placeholder="Ana, Ben"></label>
+      </div>
+      <button id="create-trip-button">Create trip</button>
+      <p class="divider">or open an existing trip</p>
+      <div class="row">
+        <input id="trip-id-input" type="number" min="1" placeholder="Trip ID">
+        <button id="open-trip-button" class="secondary">Open</button>
+      </div>
+    </section>
+
+    <section id="trip-section" class="card hidden">
+      <h2 id="trip-heading"></h2>
+      <p id="trip-meta" class="muted"></p>
+      <p id="trip-progress" class="muted"></p>
+
+      <h3>Members</h3>
+      <ul id="trip-members-list"></ul>
+      <div class="row">
+        <input id="new-member" type="text" placeholder="Add member">
+        <button id="add-member-button" class="secondary">Add</button>
+      </div>
+
+      <h3>Tasks</h3>
+      <ul id="trip-tasks-list"></ul>
+      <div class="row">
+        <input id="new-task" type="text" placeholder="Book Airbnb">
+        <button id="add-task-button" class="secondary">Add task</button>
+      </div>
+
+      <h3>Confirm dates from a poll</h3>
+      <div class="form-grid">
+        <label>Poll ID <input id="confirm-poll-id" type="number" min="1" placeholder="1"></label>
+        <label>Window start <input id="confirm-start" type="date"></label>
+      </div>
+      <button id="confirm-dates-button">Confirm dates</button>
+    </section>
+  </div>
 
   <p id="message" class="message"></p>
 

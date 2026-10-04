@@ -9,6 +9,8 @@ and nobody knows who is handling what.
 
 ## What TripSync does
 The app is split into two independent feature domains, served by one process.
+The frontend has two tabs: **Scheduling** (availability calendar) and **Trips**
+(members, task board, confirm dates).
 
 ### 1. Scheduling (deciding when)
 - Create a date poll: a date range and a trip length (e.g. 3 days in October).

@@ -1,4 +1,4 @@
-const state = { poll: null, selected: new Set() };
+const state = { poll: null, selected: new Set(), trip: null };
 
 const $ = (id) => document.getElementById(id);
 
@@ -51,7 +51,17 @@ function formatDate(isoDate) {
   });
 }
 
-// ---------- Rendering ----------
+// ---------- Tabs ----------
+
+function showTab(name) {
+  const scheduling = name === "scheduling";
+  $("panel-scheduling").classList.toggle("hidden", !scheduling);
+  $("panel-trips").classList.toggle("hidden", scheduling);
+  $("tab-scheduling").classList.toggle("active", scheduling);
+  $("tab-trips").classList.toggle("active", !scheduling);
+}
+
+// ---------- Scheduling rendering ----------
 
 function countFreePerDay() {
   const counts = {};
@@ -130,7 +140,86 @@ function renderWindows(windows) {
   }
 }
 
-// ---------- Actions ----------
+// ---------- Trips rendering ----------
+
+function renderTrip() {
+  const trip = state.trip;
+  $("trip-section").classList.remove("hidden");
+  $("trip-heading").textContent = trip.name;
+  const destination = trip.destination ? ` · ${trip.destination}` : "";
+  const dates =
+    trip.start_date && trip.end_date
+      ? ` · ${formatDate(trip.start_date)} – ${formatDate(trip.end_date)}`
+      : " · dates not confirmed";
+  $("trip-meta").textContent = `Trip #${trip.id}${destination}${dates}`;
+  $("trip-progress").textContent =
+    `Tasks: ${trip.progress.done}/${trip.progress.total} done` +
+    ` · ${trip.progress.claimed} claimed`;
+
+  const membersList = $("trip-members-list");
+  membersList.innerHTML = "";
+  for (const member of trip.members) {
+    const item = document.createElement("li");
+    item.textContent = member.name;
+    membersList.appendChild(item);
+  }
+
+  const tasksList = $("trip-tasks-list");
+  tasksList.innerHTML = "";
+  if (trip.tasks.length === 0) {
+    const empty = document.createElement("li");
+    empty.className = "muted";
+    empty.textContent = "No tasks yet.";
+    tasksList.appendChild(empty);
+    return;
+  }
+
+  for (const task of trip.tasks) {
+    const item = document.createElement("li");
+    item.className = "task-row";
+
+    const label = document.createElement("span");
+    const status = task.done
+      ? "done"
+      : task.claimed_by
+        ? `claimed by ${task.claimed_by}`
+        : "unclaimed";
+    label.textContent = `${task.title} (${status})`;
+    item.appendChild(label);
+
+    if (!task.done) {
+      if (!task.claimed_by) {
+        const claimInput = document.createElement("input");
+        claimInput.type = "text";
+        claimInput.placeholder = "Your name";
+        claimInput.className = "claim-input";
+        const claimButton = document.createElement("button");
+        claimButton.type = "button";
+        claimButton.className = "secondary";
+        claimButton.textContent = "Claim";
+        claimButton.addEventListener(
+          "click",
+          handle(() => claimTask(task.id, claimInput.value)),
+        );
+        item.append(claimInput, claimButton);
+      } else {
+        const doneButton = document.createElement("button");
+        doneButton.type = "button";
+        doneButton.className = "secondary";
+        doneButton.textContent = "Complete";
+        doneButton.addEventListener(
+          "click",
+          handle(() => completeTask(task.id)),
+        );
+        item.appendChild(doneButton);
+      }
+    }
+
+    tasksList.appendChild(item);
+  }
+}
+
+// ---------- Scheduling actions ----------
 
 function toggleDay(day) {
   if (state.selected.has(day)) {
@@ -167,6 +256,7 @@ async function loadPoll(pollId) {
   loadSelectionForParticipant();
   renderCalendar();
   await refreshWindows();
+  showTab("scheduling");
 }
 
 async function createPoll() {
@@ -197,6 +287,104 @@ async function saveAvailability() {
   showMessage(`Saved ${state.selected.size} days for ${name}.`);
 }
 
+// ---------- Trips actions ----------
+
+async function loadTrip(tripId) {
+  if (!tripId) {
+    throw new Error("Enter a trip ID");
+  }
+  state.trip = await api(`/api/trips/${tripId}`);
+  history.replaceState(null, "", `?trip=${state.trip.id}`);
+  renderTrip();
+  showTab("trips");
+}
+
+async function createTrip() {
+  const members = $("trip-members")
+    .value.split(",")
+    .map((name) => name.trim())
+    .filter(Boolean);
+  const trip = await api("/api/trips", {
+    method: "POST",
+    body: JSON.stringify({
+      name: $("trip-name").value.trim(),
+      destination: $("trip-destination").value.trim() || null,
+      members,
+    }),
+  });
+  state.trip = trip;
+  history.replaceState(null, "", `?trip=${trip.id}`);
+  renderTrip();
+  showTab("trips");
+  showMessage(`Trip #${trip.id} created.`);
+}
+
+async function addMember() {
+  const name = $("new-member").value.trim();
+  if (!name) {
+    throw new Error("Type a member name");
+  }
+  state.trip = await api(`/api/trips/${state.trip.id}/members`, {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  });
+  $("new-member").value = "";
+  renderTrip();
+  showMessage(`Added ${name}.`);
+}
+
+async function addTask() {
+  const title = $("new-task").value.trim();
+  if (!title) {
+    throw new Error("Type a task title");
+  }
+  state.trip = await api(`/api/trips/${state.trip.id}/tasks`, {
+    method: "POST",
+    body: JSON.stringify({ title }),
+  });
+  $("new-task").value = "";
+  renderTrip();
+  showMessage(`Added task "${title}".`);
+}
+
+async function claimTask(taskId, memberName) {
+  if (!memberName.trim()) {
+    throw new Error("Type your name to claim");
+  }
+  state.trip = await api(`/api/trips/${state.trip.id}/tasks/${taskId}/claim`, {
+    method: "POST",
+    body: JSON.stringify({ member: memberName.trim() }),
+  });
+  renderTrip();
+  showMessage("Task claimed.");
+}
+
+async function completeTask(taskId) {
+  state.trip = await api(`/api/trips/${state.trip.id}/tasks/${taskId}/complete`, {
+    method: "POST",
+  });
+  renderTrip();
+  showMessage("Task marked done.");
+}
+
+async function confirmDates() {
+  const datePollId = Number($("confirm-poll-id").value);
+  const start = $("confirm-start").value;
+  if (!datePollId || !start) {
+    throw new Error("Enter a poll ID and a window start date");
+  }
+  state.trip = await api(`/api/trips/${state.trip.id}/dates`, {
+    method: "PUT",
+    body: JSON.stringify({ date_poll_id: datePollId, start }),
+  });
+  renderTrip();
+  const window = state.trip.confirmed_window;
+  showMessage(
+    `Dates confirmed: ${window.start} – ${window.end}` +
+      ` (${window.available.length} available).`,
+  );
+}
+
 // ---------- Wiring ----------
 
 function handle(action) {
@@ -210,6 +398,9 @@ function handle(action) {
   };
 }
 
+$("tab-scheduling").addEventListener("click", () => showTab("scheduling"));
+$("tab-trips").addEventListener("click", () => showTab("trips"));
+
 $("create-button").addEventListener("click", handle(createPoll));
 $("open-button").addEventListener("click", handle(() => loadPoll($("poll-id-input").value)));
 $("save-button").addEventListener("click", handle(saveAvailability));
@@ -220,7 +411,17 @@ $("participant").addEventListener("change", () => {
   }
 });
 
-const pollFromUrl = new URLSearchParams(location.search).get("poll");
-if (pollFromUrl) {
+$("create-trip-button").addEventListener("click", handle(createTrip));
+$("open-trip-button").addEventListener("click", handle(() => loadTrip($("trip-id-input").value)));
+$("add-member-button").addEventListener("click", handle(addMember));
+$("add-task-button").addEventListener("click", handle(addTask));
+$("confirm-dates-button").addEventListener("click", handle(confirmDates));
+
+const params = new URLSearchParams(location.search);
+const pollFromUrl = params.get("poll");
+const tripFromUrl = params.get("trip");
+if (tripFromUrl) {
+  handle(() => loadTrip(tripFromUrl))();
+} else if (pollFromUrl) {
   handle(() => loadPoll(pollFromUrl))();
 }

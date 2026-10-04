@@ -28,6 +28,24 @@ header h1 {
   color: var(--muted);
 }
 
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.tab {
+  background: white;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.tab.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
 .card {
   background: white;
   border: 1px solid var(--border);
@@ -136,8 +154,27 @@ button.secondary {
   opacity: 0.8;
 }
 
-#windows li {
+#windows li,
+#trip-members-list li,
+#trip-tasks-list li {
   margin-bottom: 0.6rem;
+}
+
+.task-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.claim-input {
+  max-width: 140px;
+}
+
+h3 {
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
 }
 
 .message {
