@@ -18,7 +18,7 @@ Date: 2026-09-30
 Status: Decided
 Context: This project has two separate responsibilities: getting a group to agree on dates, and organizing the trip once dates are chosen. Assignment 2 will split the app into separate services, so if the two share code or tables, the split would require rewriting both.
 
-Decision: Scheduling is a generic domain that receives participant names and a trip length and returns ranked date windows, with no informatio about trips. Trips owns trips, members, itinerary and tasks. Each domain has its own folder (router, service, repository), its own APIRouter prefix and its own tables, and Trips calls Scheduling only through scheduling/service.py
+Decision: Scheduling is a generic domain that receives participant names and a trip length and returns ranked date windows, with no information about trips. Trips owns trips, members and tasks. Each domain has its own folder (router, service, repository), its own APIRouter prefix and its own tables, and Trips calls Scheduling only through scheduling/service.py
 
 Alternatives considered: A single trips module with availability stored as part of each trip. Rejected because it would give that module two reasons to change (trip organization and date finding), violating the Single Responsibility Principle, and would make date finding depend on trip tables, so it couldn't be reused for other kinds of group plans or deployed separately without rewriting both the logic and the schema.
 
